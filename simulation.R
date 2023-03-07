@@ -1,37 +1,29 @@
-source("AR_p.R")
+source("functions.R")
 
 #Simulate AR2 time series
 
 rho1 <- 0.6
 rho2 <- 0.3
-n <- 500
+beta <- 0.5
+n <- 5000
 
 x <- runif(n, 0, 10)
-y <- 0.5*x+arima.sim(n = n, list(ar = c(rho1, rho2) , sd = 0.3))
-x <- matrix(x)
-y <- matrix(y)
-plot(x ,y)
+y <- beta * x + arima.sim(n = n, list(ar = c(rho1, rho2), sd = 0.3))
+
+series <- data.frame(x, y)
+plot(series)
 
 
 # Obtain OLS residuals
-temp_mod <- lm(y~x)
+temp_mod <- lm(y ~ -1 + x, data = series)
 
 # Estimate AR parameters
-rho <- rho_arp(temp_mod$residuals, order = 2)
+rho_est <- rho_arp(temp_mod$residuals, order = 2)
 
-# Create weight matrix
+# obtain the prais winsten transform using the estimated parameters
+series_t <- pw_transform(series, rho_est)
 
-w <- diag(n)[]
 
-w[1, 1] <- sqrt(1 - rho_est^2)
-for (i in 1:(n-1)) {
-    w[i + 1, i] <- -rho_est
-}
-
-xt <- w %*% x
-yt <- w %*% y
-
-temp_mod = lm(yt~-1+xt)
-rho_est <- acf(temp_mod$residuals)$acf[2]
-plot(xt ,yt)
-rho_est
+temp_mod2 <- lm(y ~ -1 + x, data = series_t)
+temp_mod$coef
+temp_mod2$coef

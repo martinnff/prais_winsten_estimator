@@ -21,7 +21,7 @@ rho_ar2 <- function(y) {
 }
 
 
-# Rho estimation for AR_p
+# Rho estimation for AR with order p
 rho_arp <- function(y, order) {
     n <- length(y)
     mat1 <- matrix(ncol = order, nrow = order)
@@ -33,7 +33,9 @@ rho_arp <- function(y, order) {
             t2 <- (2 * order)
                 if (i < order) {
                     mat1[i, i] <- sum(y[(t1 - order + 1):(n - order + 1)]^2)
-                    mat1[i, j] <- mat1[j, i] <- sum(y[(t2 - order + 1):(n - order + 1)] * y[(t2 - order):(n - order)])
+                    mat1[i, j] <- mat1[j, i] <-
+                        sum(y[(t2 - order + 1):(n - order + 1)] *
+                        y[(t2 - order):(n - order)])
                 }else {
                     mat1[i, i] <- sum(y[t1:(n - order)]^2)
                 }
@@ -44,3 +46,19 @@ rho_arp <- function(y, order) {
     return(solve(mat1) %*% mat2)
     }
 
+pw_transform <- function(data, rho) {
+    data <- as.matrix(data)
+    n <- nrow(data)
+    w <- diag(n)
+    for (i in seq_len(length(rho))) {
+        w[i, i] <- sqrt(1 - sum(rho[i:length(rho)]^2))
+    }
+    for (i in 1:n) {
+        for (j in seq_len(length(rho))){
+            if ((i + j) < n) {
+                w[i + j, i] <- -rho[j]
+            }
+        }
+    }
+    as.data.frame(w %*% data)
+}
