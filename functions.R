@@ -62,3 +62,42 @@ pw_transform <- function(data, rho) {
     }
     as.data.frame(w %*% data)
 }
+
+prais_winsten <- function(formula, data, index, order, tol = 1e-5) {
+    update <- TRUE
+    names <- 0
+    beta <- FALSE
+    for (i in 1:order) {
+        names[i] <- paste("rho_", as.character(i), sep = "")
+    }
+    rho <- data.frame(
+        matrix(
+            rep(1000, order),
+            nrow = 1,
+            ncol = order))
+    colnames(rho) <- names
+    while (update) {
+        if (beta != FALSE) {
+            res <-  matrix(beta %*% index) - matrix(data$y)
+        }else {
+            res <- stats::lm(as.formula(formula), data = data)$residuals
+        }
+        rho_est <- rho_arp(res, order)
+        data_t <- pw_transform(data, rho_est)
+        temp_mod <- stats::lm(as.formula(formula), data = data_t)
+        beta <- temp_mod$coef
+        rho_est <- data.frame(t(rho_est))
+        colnames(rho_est) <- names
+
+        for (i in seq_len(nrow(rho))) {
+            if (all(abs(rho_est - rho[i, ]) < tol)) {
+                update <- FALSE
+            }
+        }
+        rho <- rbind(rho_est,rho)
+    }
+
+    list(rho = rho[-nrow(rho), ],
+        beta = beta,
+        model=temp_mod)
+}

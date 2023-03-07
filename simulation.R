@@ -1,32 +1,26 @@
 source("functions.R")
 
-#Simulate AR2 time series
+#Simulate AR3 time series
 
-rho1 <- 0.6
+rho1 <- 0.5
 rho2 <- 0.3
-beta <- 0.5
-n <- 5000
+rho3 <- 0.15
+beta <- 0.7
+n <- 400
 
 x <- runif(n, 0, 10)
-y <- beta * x + arima.sim(n = n, list(ar = c(rho1, rho2), sd = 0.3))
+y <- beta * x + arima.sim(n = n, list(ar = c(rho1, rho2, rho3), sd = 0.3))
 
 series <- data.frame(x, y)
 plot(series)
 
 
-# Obtain OLS residuals
-temp_mod <- lm(y ~ x, data = series)
+mod = prais_winsten(formula = "y ~ -1 + x",
+              order = 3,
+              tol = 0.000001,
+              index = series$x,
+              data = series)
 
-# Estimate AR parameters
-rho_est <- rho_arp(temp_mod$residuals, order = 2)
+mod
 
-# obtain the prais winsten transform using the estimated parameters
-series_t <- pw_transform(series, rho_est)
-
-# Estimate the model parameters
-temp_mod2 <- lm(y ~ -1 + x, data = series_t)
-
-# coefficient estimations without the transformation and
-# with the transformation
-temp_mod$coef
-temp_mod2$coef
+lm(y ~ -1 + x, series)
