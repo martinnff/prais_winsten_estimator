@@ -99,5 +99,5 @@ prais_winsten <- function(formula, data, index, order, tol = 1e-5) {
 
     list(rho = rho[-nrow(rho), ],
         beta = beta,
-        model=temp_mod)
+        model = temp_mod)
 }
