@@ -20,6 +20,17 @@ rho_ar2 <- function(y) {
     solve(mat1) %*% mat2
 }
 
+restrict_parameters <- function(rho) {
+    for (i in seq_len(length(rho))) {
+        if (rho[i] > 1) {
+            rho[i] <- 1
+        }
+        if (rho[i] < -1) {
+            rho[i] <- -1
+        }
+    }
+    return(rho)
+}
 
 # Rho estimation for AR with order p
 rho_arp <- function(y, order) {
@@ -43,7 +54,7 @@ rho_arp <- function(y, order) {
         mat2[i, 1] <- sum(y[(i + 1):n] * y[1:(n - i)])
         }
 
-    return(solve(mat1) %*% mat2)
+    restrict_parameters((solve(mat1) %*% mat2))
     }
 
 pw_transform <- function(data, rho) {
@@ -62,6 +73,15 @@ pw_transform <- function(data, rho) {
     }
     as.data.frame(w %*% data)
 }
+
+
+get_bic <- function(model, order) {
+    n <- length(model$residuals)
+    mse <- sum(model$residuals^2) / length(model$residuals)
+    (order + length(model$coef)) * log(n) - 2 * log(mse)
+}
+
+
 
 prais_winsten <- function(formula, data, index, order, tol = 1e-5) {
     update <- TRUE
@@ -94,10 +114,12 @@ prais_winsten <- function(formula, data, index, order, tol = 1e-5) {
                 update <- FALSE
             }
         }
-        rho <- rbind(rho_est,rho)
+        rho <- rbind(rho_est, rho)
     }
+    bic <- get_bic(temp_mod, order)
 
     list(rho = rho[-nrow(rho), ],
         beta = beta,
-        model = temp_mod)
+        model = temp_mod,
+        BIC = bic)
 }
