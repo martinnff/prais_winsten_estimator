@@ -62,7 +62,14 @@ pw_transform <- function(data, rho) {
     n <- nrow(data)
     w <- diag(n)
     for (i in seq_len(length(rho))) {
-        w[i, i] <- sqrt(1 - sum(rho[i:length(rho)]^2))
+        p <- sum(rho[i:length(rho)]^2)
+        if (p > 1){
+            p <- 1
+        }
+        if (p < -1){
+            p <- -1
+        }
+        w[i, i] <- sqrt(1 - p)
     }
     for (i in 1:n) {
         for (j in seq_len(length(rho))){
