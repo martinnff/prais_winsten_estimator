@@ -83,9 +83,12 @@ pw_transform <- function(data, rho) {
 
 
 get_bic <- function(model, order) {
+    df.ll <- order + length(model$coef) + 1
     n <- length(model$residuals)
-    mse <- sum(model$residuals^2) / length(model$residuals)
-    (order + length(model$coef)) * log(n) - 2 * log(mse)
+    w <- rep(1, n)
+    res <- model$residuals
+    ll<-0.5 * (sum(log(w)) - n * (log(2 * pi) + 1 - log(n) + log(sum(w * res^2))))
+    (-2 * ll + log(n) * df.ll)
 }
 
 

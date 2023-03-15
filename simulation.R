@@ -1,7 +1,7 @@
 source("functions.R")
 
 #Simulate AR3 time series
-
+set.seed(123)
 rho1 <- 0.2
 rho2 <- 0.3
 rho3 <- 0.15
@@ -24,6 +24,7 @@ mod2 <- lm(y ~ -1 + x, series)
 
 
 
+
 plot(series, pch = 20, axes = FALSE)
 lines(series$x, series$x * mod1$beta,
     col = '#8FCFBB', lwd = 2)
@@ -36,7 +37,7 @@ legend(x = "bottomright",          # Position
        fill = c("#8FCFBB", "#BF616A"))
 
 
-summary(mod1$model)
+summary(mod1$model)$r.squared
 summary(mod2)$r.squared
 
 
