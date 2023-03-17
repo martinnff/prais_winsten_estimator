@@ -58,78 +58,70 @@ rho_arp <- function(y, order) {
     }
 
 pw_transform <- function(data, rho) {
-    data <- as.matrix(data)
-    n <- nrow(data)
-    w <- diag(n)
-    for (i in seq_len(length(rho))) {
-        p <- sum(rho[i:length(rho)]^2)
-        if (p > 1){
-            p <- 1
-        }
-        if (p < -1){
-            p <- -1
-        }
-        w[i, i] <- sqrt(1 - p)
+    rho <- unlist(rho)
+    data_t <- as.matrix(data)
+    order <- length(rho)
+    for (i in seq_len(order)) {
+        n <- nrow(data_t)
+        data_t <- data_t[(i + 1):n, ] - c(rho[i]) * data_t[1:(n - i), ]
     }
-    for (i in 1:n) {
-        for (j in seq_len(length(rho))){
-            if ((i + j) < n) {
-                w[i + j, i] <- -rho[j]
-            }
-        }
-    }
-    as.data.frame(w %*% data)
+    as.data.frame(data_t)
 }
+
 
 
 get_bic <- function(model, order) {
-    df.ll <- order + length(model$coef) + 1
+    df_ll <- order + length(model$coef) + 1
     n <- length(model$residuals)
     w <- rep(1, n)
     res <- model$residuals
-    ll<-0.5 * (sum(log(w)) - n * (log(2 * pi) + 1 - log(n) + log(sum(w * res^2))))
-    (-2 * ll + log(n) * df.ll)
+    ll <- 0.5 * (sum(log(w)) - n *
+        (log(2 * pi) + 1 - log(n) +
+        log(sum(w * res^2))))
+    (-2 * ll + log(n) * df_ll)
 }
 
 
-
-prais_winsten <- function(formula, data, index, order, tol = 1e-5) {
+prais_winsten <- function(formula, data,
+    response, predictors, order, tol = 1e-5) {
     update <- TRUE
     names <- 0
-    beta <- FALSE
-    for (i in 1:order) {
-        names[i] <- paste("rho_", as.character(i), sep = "")
-    }
-    rho <- data.frame(
-        matrix(
-            rep(1000, order),
-            nrow = 1,
-            ncol = order))
-    colnames(rho) <- names
+    niter <- 1
     while (update) {
-        if (beta != FALSE) {
-            res <-  matrix(beta %*% index) - matrix(data$y)
-        }else {
-            res <- stats::lm(as.formula(formula), data = data)$residuals
+        if (niter > 1) {
+            data_t <- pw_transform(data, rho[niter, ])
+        } else {
+            data_t <- data
         }
-        rho_est <- rho_arp(res, order)
-        data_t <- pw_transform(data, rho_est)
-        temp_mod <- stats::lm(as.formula(formula), data = data_t)
-        beta <- temp_mod$coef
-        rho_est <- data.frame(t(rho_est))
-        colnames(rho_est) <- names
 
-        for (i in seq_len(nrow(rho))) {
-            if (all(abs(rho_est - rho[i, ]) < tol)) {
-                update <- FALSE
+        temp_mod <- lm(as.formula(formula), data = data_t)
+        if (niter > 1) {
+            temp_mod$coefficients[1] <-
+                temp_mod$coefficients[1] / (1 - sum(rho[niter, ]))
+        }
+        res <- predict(temp_mod, as.data.frame(predictors)) - response
+        rho_est <- unlist(unname(ar(res, aic = FALSE, order.max = order)[2]))
+        rho_est <- data.frame(t(rho_est))
+        if (niter <= 1) { # initialize dataframe with rho values
+            rho <- data.frame(matrix(data = 0, ncol = length(rho_est)))
+            for (i in seq_len(ncol(rho))) {
+                names[i] <- paste("rho_", as.character(i), sep = "")
+            }
+            colnames(rho) <- names
+        }else { # check for convergence and update dataframe
+            for (i in seq_len(nrow(rho))) {
+                if (all(abs(rho_est - rho[i, ]) < tol)) {
+                    update <- FALSE
+                }
             }
         }
-        rho <- rbind(rho_est, rho)
+        colnames(rho_est) <- names
+        rho <- rbind(rho, rho_est)
+        niter <- niter + 1
     }
-    bic <- get_bic(temp_mod, order)
-
+    bic <- get_bic(temp_mod, ncol(rho))
+    colnames(rho) <- names
     list(rho = rho[-nrow(rho), ],
-        beta = beta,
         model = temp_mod,
         BIC = bic)
 }

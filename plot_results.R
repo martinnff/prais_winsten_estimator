@@ -3,7 +3,7 @@ results <- read.csv("results.csv")[-1, ]
 
 names(results)
 
-beta_sim <- 0.1 # 0.1, 0.5, 1
+beta_sim <- 1 # 0.1, 0.5, 1
 std_sim <- 1 # 0.1, 0.4, 1
 rho <- list(rho1 = "c(0.3, 0.3, 0.3)",
            rho2 = "c(0.5, 0.2, 0.1)")
