@@ -95,10 +95,11 @@ prais_winsten <- function(formula, data,
         }
 
         temp_mod <- lm(as.formula(formula), data = data_t)
-        if (niter > 1) {
-            temp_mod$coefficients[1] <-
-                temp_mod$coefficients[1] / (1 - sum(rho[niter, ]))
+        if(niter > 1) {
+            temp_mod$coefficients[1] <- temp_mod$coefficients[1] /
+                (1 - (sum(rho[niter, ])))
         }
+
         res <- predict(temp_mod, as.data.frame(predictors)) - response
         rho_est <- unlist(unname(ar(res, aic = FALSE, order.max = order)[2]))
         rho_est <- data.frame(t(rho_est))
@@ -119,6 +120,7 @@ prais_winsten <- function(formula, data,
         rho <- rbind(rho, rho_est)
         niter <- niter + 1
     }
+
     bic <- get_bic(temp_mod, ncol(rho))
     colnames(rho) <- names
     list(rho = rho[-nrow(rho), ],

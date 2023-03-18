@@ -7,12 +7,14 @@ rho2 <- 0.3
 
 b <- 0.7
 a <- 5
-n <- 100
+n <- 1000
 x <- runif(n, 0, 10)
-y <- beta * x + arima.sim(n = n, list(ar = c(rho1,rho2), sd = 0.5))
+y <- a + b * x + arima.sim(n = n, list(ar = c(rho1,rho2), sd = 0.5))
 
 series <- data.frame(x, y)
 
+prais_winsten("x~y", series,
+    response = y, predictors = x, order = 2, tol = 1e-5)
 
 # simulation
 nsim <- 200
@@ -61,11 +63,11 @@ for (i in 1:nrow(params)) {
 
 
     for (j in 1:nsim) {
-        print(paste("sim: ", as.character(j), sep = ""))
+        #print(paste("sim: ", as.character(j), sep = ""))
         x <- runif(n, 0, 10)
-        y <- beta * x + arima.sim(n = n,
+        y <- beta0 + beta1 * x + arima.sim(n = n,
          list(ar = c(rho1, rho2),
-          sd = 0.3))
+          sd = std))
         series <- data.frame(x, y)
         # Fit lm using prais winsten
         mod1 <- prais_winsten(formula = "y ~ x",
