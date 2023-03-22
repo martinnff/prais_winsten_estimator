@@ -1,21 +1,5 @@
 source("functions.R")
 
-#Simulate AR3 time series
-set.seed(123)
-rho1 <- 0.6
-rho2 <- 0.3
-
-b <- 0.7
-a <- 5
-n <- 1000
-x <- runif(n, 0, 10)
-y <- a + b * x + arima.sim(n = n, list(ar = c(rho1,rho2), sd = 0.5))
-
-series <- data.frame(x, y)
-
-prais_winsten("x~y", series,
-    response = y, predictors = x, order = 2, tol = 1e-5)
-
 # simulation
 nsim <- 200
 params <- list(n = c(50, 100, 200, 600, 1000),

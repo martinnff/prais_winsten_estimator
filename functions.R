@@ -95,9 +95,11 @@ prais_winsten <- function(formula, data,
         }
 
         temp_mod <- lm(as.formula(formula), data = data_t)
-        if(niter > 1) {
-            temp_mod$coefficients[1] <- temp_mod$coefficients[1] /
-                (1 - (sum(rho[niter, ])))
+
+        if (niter > 1) {
+
+            temp_mod$coefficients[1] <- mean(response - c(temp_mod$coefficients[-1])*predictors)
+
         }
 
         res <- predict(temp_mod, as.data.frame(predictors)) - response

@@ -1,17 +1,17 @@
 library(dplyr)
-results <- read.csv("results.csv")[-1, ]
+results <- read.csv("results2.csv")[-1, ]
 
 names(results)
 
 beta1_sim <- 1 # 0.1, 0.5, 1
-beta0_sim <- 1
+beta0_sim <- 4
 rho <- list(rho1 = "c(0.7, 0.2)",
            rho2 = "c(0.5, 0.4)")
 
 data <- results %>%
     filter(beta == beta1_sim) %>%
     filter(beta0 == beta0_sim) %>%
-    filter(rho == rho[[1]])
+    filter(rho == rho[[2]])
 
 
 par(mfrow=c(1, 2))
